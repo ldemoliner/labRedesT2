@@ -1,7 +1,14 @@
+//TO DO
+/*
+-DEIXAR O USUARIO ESCREVER SUA MENSAGEM E PARA QUEM DESEJA ENVIAR A MENSAGEM
+-MUDAR CONTROLE DE ERRO
+-PORT E HOST DEVE SER LIDO DO ARQUIVO CONFIG E NÃO ESCRITO PELO TERMINAL
+-ENVIAR MENSAGEM BROADCAST(TODOS)
+*/
+
 //IMPORTS
 var dgram = require('dgram');
 var fs = require('fs');
-var readline = require('readline');
 //CREATING SERVER
 var server = dgram.createSocket('udp4');
 
