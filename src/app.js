@@ -4,7 +4,6 @@
 
 //TO DO
 /*
--TOKEN NÃO ESTA PASSANDO, SÓ DEPOIS DE ENVIAR TODAS MENSAGENS
 -DEIXAR O USUARIO ESCREVER SUA MENSAGEM E PARA QUEM DESEJA ENVIAR A MENSAGEM
 -MUDAR CONTROLE DE ERRO
 -ENVIAR MENSAGEM BROADCAST(TODOS)
@@ -19,9 +18,9 @@ var server = dgram.createSocket('udp4');
 //READ CONFIG
 var content = fs.readFileSync(process.argv[2], 'utf8');
 //SPLITS
-content = content.split("\r\n")
-content[0] = content[0].split(":")
-content[0][1] = parseInt(content[0][1])
+content = content.split("\r\n");
+content[0] = content[0].split(":");
+content[0][1] = parseInt(content[0][1]);
 var DESTINATION_PORT = content[0][1];
 var DESTINATION_HOST = content[0][0];
 var NAME = content[1];
@@ -33,7 +32,7 @@ ADRESS[1] = parseInt(ADRESS[1]);
 //READ MESSAGES IN QUEUE
 var queue = fs.readFileSync(process.argv[3], 'utf8');
 //SPLITS 
-queue = queue.split("\r\n")
+queue = queue.split("\r\n");
 for(let i=0; i<queue.length; i++){
     queue[i] = queue[i].split(":")
 }
@@ -47,35 +46,33 @@ server.on('listening', function () {
 //SERVER SENDING MESSAGES
 server.on('message', function (message, remote) {
     console.log(remote.address + ':' + remote.port +' - ' + message);
-    // setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {});}, TIME)
     //IF HAVE TOKEN
     if(isToken(message)){
         //IF SHOULD WRITE
         if(shouldWrite() && queue.length > 0){
-            var tuple = queue.pop()
+            var tuple = queue.pop();
             var package = `2345;naocopiado:${NAME}:${tuple[1]}:M:${tuple[0]}`
-            setTimeout(() => {server.send(package, 0, package.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME)
+            setTimeout(() => {server.send(package, 0, package.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
         } else {
-            setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {});}, TIME)
+            setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {});}, TIME);
         }
         //IF I SEND MESSAGE
     } else if(itsMe(message)){
         console.log("Mensagem retornou com sucesso!")
-        var token = Buffer("1234")
-        setTimeout(() => {server.send(token, 0, token.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME)
+        var token = Buffer("1234");
+        setTimeout(() => {server.send(token, 0, token.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
         //IF MESSAGE IS FOR ME
     } else if(forMe(message)) {
-        console.log("Mensagem recebida!")
+        console.log("Mensagem recebida!");
         message = message + ""
-        console.log(message)
         var origin = message.split(":")[1];
         var mail = message.split(":")[4];
-        console.log(origin + " " + mail)
-        var token = Buffer("1234")
-        setTimeout(() => {server.send(token, 0, token.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME)
+        console.log(origin + " " + mail);
+        var token = Buffer("1234");
+        setTimeout(() => {server.send(token, 0, token.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
     } else {
         console.log("Repassando a mensagem");
-        setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME)
+        setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
     }
 });
 
@@ -83,7 +80,7 @@ server.bind(ADRESS[1], ADRESS[0]);
 
 //VERIFY TOKEN
 if(TOKEN === "true"){
-    message = Buffer("1234")
+    message = Buffer("1234");
     server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {});
 }
 
@@ -97,13 +94,13 @@ function shouldWrite(){
 }
 
 function itsMe(message){
-    message = message + ""
-    message = message.split(":")
-    return message[1] === NAME
+    message = message + "";
+    message = message.split(":");
+    return message[1] === NAME;
 }
 
 function forMe(message){
-    message = message + ""
-    message = message.split(":")
-    return message[2] === NAME
+    message = message + "";
+    message = message.split(":");
+    return message[2] === NAME;
 }
