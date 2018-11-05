@@ -6,7 +6,6 @@
 /*
 -DEIXAR O USUARIO ESCREVER SUA MENSAGEM E PARA QUEM DESEJA ENVIAR A MENSAGEM
 -MUDAR CONTROLE DE ERRO
--ENVIAR MENSAGEM BROADCAST(TODOS)
 */
 
 //IMPORTS
@@ -51,7 +50,7 @@ server.on('message', function (message, remote) {
         //IF SHOULD WRITE
         if(shouldWrite() && queue.length > 0){
             var tuple = queue.pop();
-            var package = `2345;naocopiado:${NAME}:${tuple[1]}:M:${tuple[0]}`
+            var package = `2345;naocopiado:${NAME}:${tuple[1]}:${tuple[2]}:${tuple[0]}`
             setTimeout(() => {server.send(package, 0, package.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
         } else {
             setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {});}, TIME);
@@ -66,10 +65,15 @@ server.on('message', function (message, remote) {
         console.log("Mensagem recebida!");
         message = message + ""
         var origin = message.split(":")[1];
+        var from = message.split(":")[2];
         var mail = message.split(":")[4];
-        console.log(origin + " " + mail);
-        var token = Buffer("1234");
-        setTimeout(() => {server.send(token, 0, token.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+        console.log("\nDe:" + origin + "\nPara:"+ from + "\nMensagem:" + mail);
+        if(from === NAME){
+            var token = Buffer("1234");
+            setTimeout(() => {server.send(token, 0, token.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+        }else{
+            setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+        }
     } else {
         console.log("Repassando a mensagem");
         setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
@@ -102,5 +106,5 @@ function itsMe(message){
 function forMe(message){
     message = message + "";
     message = message.split(":");
-    return message[2] === NAME;
+    return message[2] === NAME || message[2] === "TODOS";
 }
