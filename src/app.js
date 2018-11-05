@@ -19,7 +19,10 @@ var server = dgram.createSocket('udp4');
 //READ CONFIG
 var content = fs.readFileSync(process.argv[2], 'utf8');
 //SPLITS
-content = content.split("\r\n");
+//WINDOWS
+//content = content.split("\r\n");
+//LINUX
+content = content.split("\n");
 content[0] = content[0].split(":");
 content[0][1] = parseInt(content[0][1]);
 var DESTINATION_PORT = content[0][1];
@@ -34,7 +37,10 @@ ADRESS[1] = parseInt(ADRESS[1]);
 //READ MESSAGES IN QUEUE
 var queue = fs.readFileSync(process.argv[3], 'utf8');
 //SPLITS 
-queue = queue.split("\r\n");
+//WINDOWS
+//queue = queue.split("\r\n");
+//LINUX
+queue = queue.split("\n");
 for(let i=0; i<queue.length; i++){
     queue[i] = queue[i].split(":")
 }
@@ -53,7 +59,9 @@ server.on('message', function (message, remote) {
         console.log(queue);
         //IF SHOULD WRITE
         if(shouldWrite() && queue.length > 0){
-            var tuple = queue.pop();
+            var top = queue[queue.length-1];
+            var tuple = top;
+            ERROR_CONTROL = "naocopiado"
             var package = `2345;${ERROR_CONTROL}:${NAME}:${tuple[1]}:${tuple[2]}:${tuple[0]}`
             sendPackage(package);
         } else {
@@ -61,16 +69,29 @@ server.on('message', function (message, remote) {
         }
         //IF I SEND MESSAGE
     } else if(itsMe(message)){
-        console.log("Mensagem retornou com sucesso!")
-        var token = Buffer("1234");
-        sendToken(token);
+        message = message+""
+        var erro = message.split(":")[0].split(";")[1];
+        console.log("ERRO AO RETORNAR")
+        console.log(erro)
+        if(erro === "naocopiado" || erro === "OK"){
+            console.log("A mensagem retornou!");
+            queue.pop();
+            var token = Buffer("1234");
+            sendToken(token);
+        } else {
+            console.log("Ocorreu um erro com a mensaagem, adicionando a fila novamente");
+            message = message.replace("erro","naocopiado");
+            console.log(queue);
+            var token = Buffer("1234");
+            sendToken(token);
+        }
         //IF MESSAGE IS FOR ME
     } else if(forMe(message)) {
         randomError();
-        console.log(ERROR_CONTROL);
         if(ERROR_CONTROL === "OK"){
             console.log("Mensagem recebida!");
-            message = message + ""
+            message = message + "";
+            message = message.replace("naocopiado",ERROR_CONTROL);
             var origin = message.split(":")[1];
             var from = message.split(":")[2];
             var mail = message.split(":")[4];
@@ -81,15 +102,18 @@ server.on('message', function (message, remote) {
             }else{
                 sendMessage(message);
             }
-        }else{
+        }else {
             //AJUSTAR ESSE ELSE
             console.log("Ocorreu um erro com a mensagem");
-            var token = Buffer("1234");
-            sendToken(token);
+            message = message + "";
+            message = message.replace("naocopiado",ERROR_CONTROL) 
+            console.log(ERROR_CONTROL)           
+            sendMessage(message);
         }
     } else {
         console.log("Repassando a mensagem");
         sendMessage(message);
+        console.log(message+"")
     }
 });
 
@@ -124,7 +148,7 @@ function forMe(message){
 }
 
 function randomError(){
-    if(Math.random() < 0.01){
+    if(Math.random() < 0.8){
         return ERROR_CONTROL = "erro"
     }else {
         return ERROR_CONTROL = "OK"
