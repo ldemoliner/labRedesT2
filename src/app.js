@@ -5,7 +5,7 @@
 //TO DO
 /*
 -DEIXAR O USUARIO ESCREVER SUA MENSAGEM E PARA QUEM DESEJA ENVIAR A MENSAGEM
--MUDAR CONTROLE DE ERRO
+-AO OCORRER UM ERRO, COLOCAR DE VOLTA NA FILA E PASSAR O TOKEN
 */
 
 //IMPORTS
@@ -25,6 +25,7 @@ var DESTINATION_HOST = content[0][0];
 var NAME = content[1];
 var TIME = content[2]*1000;
 var TOKEN = content[3];
+var ERROR_CONTROL = "naocopiado";
 var ADRESS = process.argv[4].split(":");
 ADRESS[1] = parseInt(ADRESS[1]);
 
@@ -47,36 +48,46 @@ server.on('message', function (message, remote) {
     console.log(remote.address + ':' + remote.port +' - ' + message);
     //IF HAVE TOKEN
     if(isToken(message)){
+        console.log(queue);
         //IF SHOULD WRITE
         if(shouldWrite() && queue.length > 0){
             var tuple = queue.pop();
-            var package = `2345;naocopiado:${NAME}:${tuple[1]}:${tuple[2]}:${tuple[0]}`
-            setTimeout(() => {server.send(package, 0, package.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+            var package = `2345;${ERROR_CONTROL}:${NAME}:${tuple[1]}:${tuple[2]}:${tuple[0]}`
+            sendPackage(package);
         } else {
-            setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {});}, TIME);
+            sendMessage(message);
         }
         //IF I SEND MESSAGE
     } else if(itsMe(message)){
         console.log("Mensagem retornou com sucesso!")
         var token = Buffer("1234");
-        setTimeout(() => {server.send(token, 0, token.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+        sendToken(token);
         //IF MESSAGE IS FOR ME
     } else if(forMe(message)) {
-        console.log("Mensagem recebida!");
-        message = message + ""
-        var origin = message.split(":")[1];
-        var from = message.split(":")[2];
-        var mail = message.split(":")[4];
-        console.log("\nDe:" + origin + "\nPara:"+ from + "\nMensagem:" + mail);
-        if(from === NAME){
-            var token = Buffer("1234");
-            setTimeout(() => {server.send(token, 0, token.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+        randomError();
+        console.log(ERROR_CONTROL);
+        if(ERROR_CONTROL === "OK"){
+            console.log("Mensagem recebida!");
+            message = message + ""
+            var origin = message.split(":")[1];
+            var from = message.split(":")[2];
+            var mail = message.split(":")[4];
+            console.log("\nDe:" + origin + "\nPara:"+ from + "\nMensagem:" + mail);
+            if(from === NAME){
+                var token = Buffer("1234");
+                sendToken(token);
+            }else{
+                sendMessage(message);
+            }
         }else{
-            setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+            //AJUSTAR ESSE ELSE
+            console.log("Ocorreu um erro com a mensagem");
+            var token = Buffer("1234");
+            sendToken(token);
         }
     } else {
         console.log("Repassando a mensagem");
-        setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+        sendMessage(message);
     }
 });
 
@@ -85,9 +96,10 @@ server.bind(ADRESS[1], ADRESS[0]);
 //VERIFY TOKEN
 if(TOKEN === "true"){
     message = Buffer("1234");
-    server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {});
+    sendMessage(message);
 }
 
+//METHODS
 function isToken(message){
     return message + "" === "1234";
 }
@@ -107,4 +119,24 @@ function forMe(message){
     message = message + "";
     message = message.split(":");
     return message[2] === NAME || message[2] === "TODOS";
+}
+
+function randomError(){
+    if(Math.random() < 0.01){
+        return ERROR_CONTROL = "erro"
+    }else {
+        return ERROR_CONTROL = "OK"
+    }
+}
+
+function sendMessage(message){
+    setTimeout(() => {server.send(message, 0, message.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+}
+
+function sendToken(token){
+    setTimeout(() => {server.send(token, 0, token.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
+}
+
+function sendPackage(package){
+    setTimeout(() => {server.send(package, 0, package.length, DESTINATION_PORT, DESTINATION_HOST, (err, bytes) => {})}, TIME);
 }
