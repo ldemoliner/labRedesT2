@@ -1,6 +1,8 @@
 //HOW TO START
 //node app.js <config.txt> <mensagem> <seu endereço>
 //node app.js <withToken.txt> <messages2.txt> <127.0.0.1:6000>
+//node app.js <withoutToken.txt> <messages3.txt> <127.0.0.1:6001>
+//node app.js <withoutToken2.txt> <messages.txt> <127.0.0.1:6002>
 
 //TO DO
 /*
